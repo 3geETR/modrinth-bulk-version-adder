@@ -10,7 +10,7 @@ from questionary import Choice
 from typing import List, Dict
 
 API_BASE = "https://api.modrinth.com/v2"
-MY_UA = "modrinth-bulk-tag-tui/1.0 (github.com/egemacun)"
+MY_UA = "bulk-version-adder/1.0"
 
 # Optionally hardcode your token here (not recommended for public scripts)
 HARDCODED_TOKEN: str = ""  # "pat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -112,7 +112,7 @@ def prompt_versions() -> str:
 
 
 def main():
-    print("\n=== Modrinth Bulk Version Tagger (TUI) ===\n")
+    print("\n=== Modrinth Bulk Version Adder ===\n")
 
     token = prompt_token().strip()
     if not token:
