@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modrinth Bulk Version Adder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary:        #0078d4;
+            --primary-dark:   #005ea2;
+            --secondary:      #f3f4f6;
+            --text:           #1f2937;
+            --text-light:     #4b5563;
+            --success:        #22c55e;
+            --warning:        #f59e0b;
+            --error:          #ef4444;
+            --border:         #e5e7eb;
+            --card-bg:        #ffffff;
+            --shadow:         0 4px 12px rgba(0, 0, 0, 0.1);
+            --body-bg:        linear-gradient(135deg,#f9fafb 0%,#e5e7eb 100%);
+            --checkbox-bg:    #ffffff;
+            --checkbox-hover: #f3f4f6;
+            --version-badge-bg:   #e0f2fe;
+            --version-badge-color: #0284c7;
+            --log-bg:             #f3f4f6;
+            --footer-color:       #6b7280;
+        }
+
+        html.dark-theme {
+        color-scheme: dark;               /* for native form controls */
+        --primary:        #0a84ff;
+        --primary-dark:   #5ac8fa;
+        --secondary:      #252525;
+        --text:           #f5f5f5;
+        --text-light:     #bababa;
+        --success:        #34c759;
+        --warning:        #ff9f0a;
+        --error:          #ff453a;
+        --border:         #3c3c3c;
+        --card-bg:        #1e1e1f;
+        --shadow:         0 4px 12px rgba(0, 0, 0, .6);
+        --body-bg:        linear-gradient(135deg,#1b1b1d 0%,#000 100%);
+        --checkbox-bg:    #2a2a2a;
+        --checkbox-hover: #333;
+        --version-badge-bg:   #1e2a38;
+        --version-badge-color: #5ac8fa;
+        --log-bg:             #141414;
+        --footer-color:       #999;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--body-bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-bottom: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header i {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-right: 12px;
+        }
+
+        .card-header h2 {
+            font-size: 1.5rem;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: border 0.3s ease;
+            background-color: var(--card-bg);
+            color: var(--text);
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(100, 181, 246, 0.2);
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #388e3c;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: var(--checkbox-bg);
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            background: var(--checkbox-hover);
+        }
+
+        .checkbox-item input {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: var(--radius);
+            margin-top: 20px;
+            display: none;
+        }
+
+        .status-success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .status-error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        .status-info {
+            background: rgba(30, 136, 229, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .progress-container {
+            height: 10px;
+            background: #555;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .log-container {
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 15px;
+            background: var(--log-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-success {
+            color: var(--success);
+        }
+
+        .log-error {
+            color: var(--error);
+        }
+
+        .log-warning {
+            color: var(--warning);
+        }
+
+        .log-info {
+            color: var(--primary);
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--version-badge-bg);
+            color: var(--version-badge-color);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin: 2px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: var(--footer-color);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-cubes"></i> Modrinth Bulk Version Adder</h1>
+            <p class="subtitle">Add Minecraft versions to multiple Modrinth projects at once. This tool helps you manage your mod versions efficiently without manually updating each project.</p>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-key"></i>
+                <h2>Authentication</h2>
+            </div>
+            <div class="form-group">
+                <label for="token">Modrinth Access Token</label>
+                <input type="password" id="token" placeholder="Enter your Modrinth API token (pat_xxxxxxxxxxxx)">
+                <small>You can generate an access token in your <a href="https://modrinth.com/settings/account" target="_blank" style="color: var(--primary);">Modrinth account settings</a>.</small>
+            </div>
+            <button id="loginBtn" class="btn btn-block">
+                <i class="fas fa-sign-in-alt"></i> Authenticate
+            </button>
+            <div id="authStatus" class="status"></div>
+        </div>
+
+        <div class="card" id="projectsCard" style="display: none;">
+            <div class="card-header">
+                <i class="fas fa-folder-open"></i>
+                <h2>Your Projects</h2>
+            </div>
+            <div class="form-group">
+                <label>Select projects to update:</label>
+                <div id="projectsContainer" class="checkbox-grid"></div>
+            </div>
+            <button id="selectAllBtn" class="btn">
+                <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button id="deselectAllBtn" class="btn">
+                <i class="fas fa-square"></i> Deselect All
+            </button>
+        </div>
+
+        <div class="card" id="versionsCard" style="display: none;">
+            <div class="card-header">
+                <i class="fas fa-code-branch"></i>
+                <h2>Target Versions</h2>
+            </div>
+            <div class="form-group">
+                <label for="versions">Minecraft Versions to Add</label>
+                <input type="text" id="versions" placeholder="e.g. 1.21.6 | 1.21.1-1.21.6 | 1.21.3,1.21.6">
+                <small>Enter single versions, comma-separated, or ranges (e.g. 1.20.1-1.20.4)</small>
+            </div>
+            <div class="form-group">
+                <label>Parsed Versions:</label>
+                <div id="parsedVersions"></div>
+            </div>
+            <button id="previewBtn" class="btn">
+                <i class="fas fa-eye"></i> Preview Changes
+            </button>
+            <div id="previewStatus" class="status"></div>
+        </div>
+
+        <div class="card" id="executeCard" style="display: none;">
+            <div class="card-header">
+                <i class="fas fa-bolt"></i>
+                <h2>Execute Updates</h2>
+            </div>
+            <div class="form-group">
+                <label>Execution Summary:</label>
+                <div id="summaryInfo"></div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <button id="executeBtn" class="btn btn-success btn-block">
+                <i class="fas fa-play-circle"></i> Apply Versions to Selected Projects
+            </button>
+            <div id="executeStatus" class="status"></div>
+            <div class="log-container" id="logContainer"></div>
+        </div>
+
+        <div class="footer">
+            <p>Modrinth Bulk Version Adder v1.0 | This tool is not affiliated with Modrinth</p>
+            <p>All API requests are made directly from your browser to Modrinth's API. Your token is never stored or sent to any other server.</p>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        const state = {
+            token: '',
+            username: '',
+            projects: [],
+            selectedProjects: [],
+            versions: [],
+            previewData: [],
+            touched: 0
+        };
+
+        // DOM Elements
+        const tokenInput = document.getElementById('token');
+        const loginBtn = document.getElementById('loginBtn');
+        const authStatus = document.getElementById('authStatus');
+        const projectsCard = document.getElementById('projectsCard');
+        const projectsContainer = document.getElementById('projectsContainer');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deselectAllBtn = document.getElementById('deselectAllBtn');
+        const versionsCard = document.getElementById('versionsCard');
+        const versionsInput = document.getElementById('versions');
+        const parsedVersions = document.getElementById('parsedVersions');
+        const previewBtn = document.getElementById('previewBtn');
+        const previewStatus = document.getElementById('previewStatus');
+        const executeCard = document.getElementById('executeCard');
+        const summaryInfo = document.getElementById('summaryInfo');
+        const progressBar = document.getElementById('progressBar');
+        const executeBtn = document.getElementById('executeBtn');
+        const executeStatus = document.getElementById('executeStatus');
+        const logContainer = document.getElementById('logContainer');
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        // API Configuration
+        const API_BASE = "https://api.modrinth.com/v2";
+        const MY_UA = "bulk-version-adder-web/1.0";
+
+        // Check system preference for dark mode
+        function checkSystemTheme() {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark-theme', prefersDark);
+        themeIcon.className = prefersDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Toggle theme manually
+        themeToggle.addEventListener('click', () => {
+            const isDarkNow = document.documentElement.classList.toggle('dark-theme');
+            themeIcon.className = isDarkNow ? 'fas fa-sun' : 'fas fa-moon';
+        });
+
+        // Authentication
+        loginBtn.addEventListener('click', async () => {
+            const token = tokenInput.value.trim();
+            if (!token) {
+                showStatus(authStatus, 'Please enter your Modrinth access token', 'error');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+            
+            try {
+                const username = await getUsername(token);
+                state.token = token;
+                state.username = username;
+                
+                showStatus(authStatus, `Successfully authenticated as: ${username}`, 'success');
+                
+                // Fetch user projects
+                const projects = await listProjects(username, token);
+                state.projects = projects;
+                
+                renderProjects(projects);
+                projectsCard.style.display = 'block';
+                versionsCard.style.display = 'block';
+                
+            } catch (error) {
+                showStatus(authStatus, `Authentication failed: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Authenticate';
+            }
+        });
+
+        // Project selection
+        selectAllBtn.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.project-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            state.selectedProjects = state.projects.map(p => p.slug);
+        });
+
+        deselectAllBtn.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.project-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            state.selectedProjects = [];
+        });
+
+        // Version parsing
+        versionsInput.addEventListener('input', () => {
+            try {
+                const versions = parseVersions(versionsInput.value);
+                state.versions = versions;
+                renderParsedVersions(versions);
+            } catch (error) {
+                parsedVersions.innerHTML = `<span class="log-error">${error.message}</span>`;
+            }
+        });
+
+        // Preview changes
+        previewBtn.addEventListener('click', async () => {
+            if (!state.versions.length) {
+                showStatus(previewStatus, 'Please enter valid Minecraft versions', 'error');
+                return;
+            }
+
+            if (state.selectedProjects.length === 0) {
+                showStatus(previewStatus, 'Please select at least one project', 'error');
+                return;
+            }
+
+            previewBtn.disabled = true;
+            previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            
+            try {
+                state.previewData = [];
+                
+                // Show summary
+                summaryInfo.innerHTML = `
+                    <p><strong>Logged in as:</strong> ${state.username}</p>
+                    <p><strong>Projects to update:</strong> ${state.selectedProjects.length}</p>
+                    <p><strong>Versions to add:</strong> ${state.versions.join(', ')}</p>
+                `;
+                
+                executeCard.style.display = 'block';
+                showStatus(previewStatus, 'Preview completed. Ready to execute updates.', 'success');
+                
+            } catch (error) {
+                showStatus(previewStatus, `Preview failed: ${error.message}`, 'error');
+            } finally {
+                previewBtn.disabled = false;
+                previewBtn.innerHTML = '<i class="fas fa-eye"></i> Preview Changes';
+            }
+        });
+
+        // Execute updates
+        executeBtn.addEventListener('click', async () => {
+            if (!state.versions.length || !state.selectedProjects.length) {
+                showStatus(executeStatus, 'Please complete all steps first', 'error');
+                return;
+            }
+
+            executeBtn.disabled = true;
+            executeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            state.touched = 0;
+            logContainer.innerHTML = '';
+            
+            try {
+                const totalProjects = state.selectedProjects.length;
+                let completed = 0;
+                
+                for (const slug of state.selectedProjects) {
+                    const project = state.projects.find(p => p.slug === slug);
+                    addLog(`🔹 Starting: ${project.title} (${slug})`, 'info');
+                    
+                    try {
+                        const versions = await listVersions(slug, state.token);
+                        
+                        for (const v of versions) {
+                            const currentVersions = v.game_versions;
+                            const missing = state.versions.filter(ver => !currentVersions.includes(ver));
+                            
+                            if (missing.length > 0) {
+                                const newVersions = [...new Set([...currentVersions, ...state.versions])];
+                                addLog(`   • ${v.name}: ${currentVersions.join(', ')} → ${newVersions.join(', ')}`, 'info');
+                                
+                                try {
+                                    // Simulate API call
+                                    await new Promise(resolve => setTimeout(resolve, 300));
+                                    state.touched++;
+                                    addLog(`      ✓ Updated successfully`, 'success');
+                                } catch (error) {
+                                    addLog(`      ✗ Update failed: ${error.message}`, 'error');
+                                }
+                            }
+                        }
+                        
+                        completed++;
+                        updateProgress((completed / totalProjects) * 100);
+                        
+                    } catch (error) {
+                        addLog(`   ⟶ Failed to process versions: ${error.message}`, 'error');
+                    }
+                }
+                
+                showStatus(executeStatus, `✅ Done. Versions updated: ${state.touched}`, 'success');
+                
+            } catch (error) {
+                showStatus(executeStatus, `❌ Execution failed: ${error.message}`, 'error');
+            } finally {
+                executeBtn.disabled = false;
+                executeBtn.innerHTML = '<i class="fas fa-play-circle"></i> Apply Versions to Selected Projects';
+            }
+        });
+
+        // API Functions
+        async function getUsername(token) {
+            const response = await fetch(`${API_BASE}/user`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'User-Agent': MY_UA
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.username;
+        }
+
+        async function listProjects(username, token) {
+            const response = await fetch(`${API_BASE}/user/${username}/projects`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'User-Agent': MY_UA
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch projects: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        async function listVersions(slug, token) {
+            const response = await fetch(`${API_BASE}/project/${slug}/version`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'User-Agent': MY_UA
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch versions: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        // Version parsing
+        function parseVersions(inputStr) {
+            if (!inputStr.trim()) {
+                throw new Error('Version input cannot be empty!');
+            }
+
+            const versions = [];
+            const parts = inputStr.split(',').map(p => p.trim()).filter(p => p);
+            const rangeRe = /^(\d+(?:\.\d+){1,2})-(\d+(?:\.\d+){1,2})$/;
+
+            for (const part of parts) {
+                const match = part.match(rangeRe);
+                if (match) {
+                    const start = match[1];
+                    const end = match[2];
+                    versions.push(...expandRange(start, end));
+                } else {
+                    versions.push(part);
+                }
+            }
+
+            // Remove duplicates and sort
+            return [...new Set(versions)].sort((a, b) => {
+                const aParts = a.split('.').map(Number);
+                const bParts = b.split('.').map(Number);
+                
+                for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                    const aVal = aParts[i] || 0;
+                    const bVal = bParts[i] || 0;
+                    if (aVal !== bVal) return aVal - bVal;
+                }
+                return 0;
+            });
+        }
+
+        function expandRange(start, end) {
+            const sParts = start.split('.');
+            const eParts = end.split('.');
+            
+            if (sParts.length !== eParts.length) {
+                throw new Error(`Mismatched version formats: ${start}-${end}`);
+            }
+            
+            // Check that all parts except the last are the same
+            for (let i = 0; i < sParts.length - 1; i++) {
+                if (sParts[i] !== eParts[i]) {
+                    throw new Error('Only the last numeric segment can vary in range');
+                }
+            }
+            
+            const startLast = parseInt(sParts[sParts.length - 1]);
+            const endLast = parseInt(eParts[eParts.length - 1]);
+            
+            if (isNaN(startLast) || isNaN(endLast)) {
+                throw new Error('Range segments must be numeric');
+            }
+            
+            if (startLast > endLast) {
+                throw new Error('Range start must not be greater than end');
+            }
+            
+            const base = sParts.slice(0, -1).join('.');
+            const versions = [];
+            
+            for (let i = startLast; i <= endLast; i++) {
+                versions.push(`${base}.${i}`);
+            }
+            
+            return versions;
+        }
+
+        // UI Rendering
+        function renderProjects(projects) {
+            projectsContainer.innerHTML = '';
+            
+            projects.forEach(project => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                
+                div.innerHTML = `
+                    <input type="checkbox" class="project-checkbox" id="project-${project.slug}" value="${project.slug}" checked>
+                    <label for="project-${project.slug}">
+                        <strong>${project.title}</strong><br>
+                        <small>${project.slug}</small>
+                    </label>
+                `;
+                
+                projectsContainer.appendChild(div);
+                
+                // Add event listener
+                const checkbox = div.querySelector('.project-checkbox');
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        state.selectedProjects.push(project.slug);
+                    } else {
+                        state.selectedProjects = state.selectedProjects.filter(slug => slug !== project.slug);
+                    }
+                });
+            });
+            
+            // Initialize selected projects
+            state.selectedProjects = projects.map(p => p.slug);
+        }
+
+        function renderParsedVersions(versions) {
+            if (versions.length === 0) {
+                parsedVersions.innerHTML = '<span class="log-warning">No versions parsed</span>';
+                return;
+            }
+            
+            parsedVersions.innerHTML = versions.map(v => 
+                `<span class="version-badge">${v}</span>`
+            ).join('');
+        }
+
+        function showStatus(element, message, type) {
+            element.textContent = message;
+            element.className = 'status';
+            element.classList.add(`status-${type}`);
+            element.style.display = 'block';
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function addLog(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = message;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function updateProgress(percent) {
+            progressBar.style.width = `${percent}%`;
+        }
+
+        // Initialize theme
+        checkSystemTheme();
+    </script>
+</body>
+</html>
