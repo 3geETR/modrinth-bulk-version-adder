@@ -5,6 +5,9 @@ Easily add a **Minecraft version** to multiple Modrinth projects at once.
 When Mojang pushes a new game version, running this script means you no longer need to open each project page and click through the UI by hand.  
 Instead, run the Python script, enter your **Modrinth Personal Access Token (PAT)**, tick the projects, write the versions you want, and let it handle the API calls for you.
 
+> 💡 **Prefer a web version?** Use it here: [https://3gee.is-a.dev/modrinth-bulk-version-adder/](https://3gee.is-a.dev/modrinth-bulk-version-adder/)
+
+
 ![CLI demo](images/cli-demo.gif)
 
 ---
@@ -47,6 +50,8 @@ pip install -r requirements.txt
 # Run The Script
 python bulk-version-adder.py
 ```
+
+**Alternatively, use the web version instead of installing anything:** [https://3gee.is-a.dev/modrinth-bulk-version-adder/](https://3gee.is-a.dev/modrinth-bulk-version-adder/)
 
 ---
 
